@@ -34,7 +34,7 @@ with st.container():
             status.update(label="✅ 처리 완료!", state="complete", expanded=False)
         
         work_sim, lecture_sim = [float(round(x, 3)) for x in work_sim], [round(x, 3) for x in lecture_sim]
-
+        
         detail_result = (
             f'추천된 직업 : {work_name_out}\n'
             f'직업 유사도 : {work_sim}\n'
