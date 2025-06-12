@@ -1,7 +1,12 @@
 import streamlit as st
+import openai
 from process import load_data, query_process, work_process, make_lecture_query, lecture_process, create_prompt, make_output, WORK_K, LECTURE_K, WORK_COUNT, LECTURE_COUNT
 
-model, work_name, work_info, lecture_name, work_idx, f_idx, work_f_idx, work_f_name, lecture_idx, client = load_data()
+model, work_name, work_info, lecture_name, work_idx, f_idx, work_f_idx, work_f_name, lecture_idx = load_data()
+
+#지피티 클라이언트
+API = st.secrets['API']
+client = openai.OpenAI(api_key=API)
 
 with open("intro.md", "r", encoding="utf-8") as f:
     intro_md = f.read()
