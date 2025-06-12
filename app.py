@@ -5,6 +5,7 @@ model, work_name, work_info, lecture_name, work_idx, f_idx, work_f_idx, work_f_n
 
 with open("intro.md", "r", encoding="utf-8") as f:
     intro_md = f.read()
+detail_result = ''
 
 with st.container():
 
@@ -32,12 +33,13 @@ with st.container():
 
             status.update(label="✅ 처리 완료!", state="complete", expanded=False)
         
+        work_sim, lecture_sim = [round(x, 3) for x in work_sim], [round(x, 3) for x in lecture_sim]
+
         detail_result = (
-            f'출력\n{gpt_out}\n'
-            f'work_name : {work_name_out}\n'
-            f'work_sim : {work_sim}\n'
-            f'lecture_name : {lecture_name_out}\n'
-            f'lecture_sim : {lecture_sim}\n'
+            f'추천된 직업 : {work_name_out}\n'
+            f'직업 유사도 : {work_sim}\n'
+            f'추천된 강의 : {lecture_name_out}\n'
+            f'강의 유사도 : {lecture_sim}\n'
         )
 
         ai = st.chat_message("ai")
