@@ -6,10 +6,9 @@ import const
 import streamlit as st
 
 MODEL, WORK_IDX, WORK_NAME, WORK_INFO, F_IDX, WORK_F_IDX, WORK_F_NAME, LECTURE_IDX, LECTURE_NAME, WORK_K, LECTURE_K, WORK_COUNT, LECTURE_COUNT = const.const_return()
-
+API = st.secrets['API']
 
 #만든 데이터 로드
-@st.cache_data
 def load_data():
     #임베딩 모델
     model = SentenceTransformer(MODEL)
@@ -35,7 +34,10 @@ def load_data():
     #이름라벨
     lecture_name = pd.read_csv(LECTURE_NAME)
 
-    return model, work_name, work_info, lecture_name, work_idx, f_idx, work_f_idx, work_f_name, lecture_idx
+    #지피티 클라이언트
+    client = openai.OpenAI(api_key=API)
+
+    return model, work_name, work_info, lecture_name, work_idx, f_idx, work_f_idx, work_f_name, lecture_idx, client
 
 #질의문 생성
 def query_process(query, model):
