@@ -1,0 +1,227 @@
+import pandas as pd
+from sentence_transformers import SentenceTransformer
+import faiss
+import openai
+import const
+import streamlit as st
+
+MODEL, WORK_IDX, WORK_NAME, WORK_INFO, F_IDX, WORK_F_IDX, WORK_F_NAME, LECTURE_IDX, LECTURE_NAME, WORK_K, LECTURE_K, WORK_COUNT, LECTURE_COUNT = const.const_return()
+API = st.secrets['API']
+
+#만든 데이터 로드
+def load_data():
+    #임베딩 모델
+    model = SentenceTransformer(MODEL)
+
+    #직업관련 파일
+    #설명기반 인덱스
+    work_idx = faiss.read_index(WORK_IDX)
+    #인덱스 이름, 설명 라벨
+    work_name = pd.read_csv(WORK_NAME)
+    
+    #지표기반 인덱스
+    f_idx = faiss.read_index(F_IDX)
+    work_f_idx = faiss.read_index(WORK_F_IDX)
+    #인덱스 이름, 설명 라벨
+    work_f_name = pd.read_csv(WORK_F_NAME)
+    
+    #직업 설명용 라벨
+    work_info = pd.read_csv(WORK_INFO)
+
+    #강좌관련 파일
+    #인덱스
+    lecture_idx = faiss.read_index(LECTURE_IDX)
+    #이름라벨
+    lecture_name = pd.read_csv(LECTURE_NAME)
+
+    #지피티 클라이언트
+    client = openai.OpenAI(api_key=API)
+
+    return model, work_name, work_info, lecture_name, work_idx, f_idx, work_f_idx, work_f_name, lecture_idx, client
+
+#질의문 생성
+def query_process(query, model):
+    #쿼리 전처리
+    query = model.encode(query, show_progress_bar=False, batch_size=128).astype('float32')
+    faiss.normalize_L2(query)
+    #반환
+    return query
+
+#직업 설명 뽑기
+def make_lecture_query(name_list, work_info, model):
+    #뽑기
+    string = work_info.loc[work_info['직업_이름'].isin(name_list), '문장'].values[0]
+    string = string.split('\n')
+    #2개씩 묶기
+    paired = []
+    for i in range(0, len(string), 2):
+        if i + 1 < len(string):
+            pair = string[i] + ' ' + string[i + 1]
+        else:
+            pair = string[i]  # 마지막 홀수 문장은 단독으로
+        paired.append(pair)
+    #임베딩
+    return query_process(paired, model)
+
+
+#리스트에서 빈도, 유사도 기준 상위 k개 뽑기
+def top_k_list(name, sim, count):
+    data = dict()
+    for s, n in zip(sim, name):
+        if n in data:
+            data[n].append(s)
+        else:
+            data[n] = [s]
+
+    data = [(idx, s) for idx, s in data.items()]
+    #빈도 내림차순, 경합시 유사도 내림차순
+    data = sorted(data, key = lambda x : (-len(x[1]), -x[1][0]))
+    #count개 추출
+    data = data[:count]
+    
+    name_result = [n for n, s in data]
+    #평균
+    sim_result = [sum(s)/len(s) for n, s in data]
+
+    return name_result, sim_result
+
+#설명기반
+#직업 처리, 강좌용 질의문 생성
+def work_e_process(query, k, count, work_idx, work_name):
+    #파이스 검색 후 상위만 뽑기
+    sim, I = work_idx.search(query, k)
+    #이름 뽑기
+    name = work_name.iloc[I[0], 0].tolist()
+
+    #빈도, 유사도 기준 상위 k개 뽑기
+    name, sim = top_k_list(name, sim[0], count)
+
+    #반환
+    return name, sim
+
+#지표기반
+def work_F_process(query, count, f_idx, work_idx, work_name):
+    #사용자 입력으로 지표 유사벡터 뽑기
+    f_sim, I = f_idx.search(query, f_idx.ntotal)
+    #관련없는거 0처리, 쿼리 형식으로 변경
+    f_sim[f_sim <= 0.2] = 0
+    f_sim = f_sim.astype('float32')
+    
+    faiss.normalize_L2(f_sim)
+    
+    #직업-지표점수 벡터로 검색
+    sim, I = work_idx.search(f_sim, count)
+    #이름 뽑기
+    name = work_name.iloc[I[0], 0].tolist()
+    
+    #반환
+    return name, sim[0]
+
+#직업 전체과정
+def work_process(query, k, count, work_idx, work_name, f_idx, work_f_idx, work_f_name):
+    e_name, e_sim = work_e_process(query, k, count, work_idx, work_name)
+    F_name, F_sim = work_F_process(query, count, f_idx, work_f_idx, work_f_name)
+
+    comp = e_sim[0]
+    if comp >= 0.55:
+        return e_name, e_sim
+    elif comp <= 0.44:
+        return F_name, F_sim
+    else:
+        name, sim = e_name + F_name, list(e_sim) + list(F_sim)
+        #결합 후 정렬
+        sorted_idx = sorted(range(len(sim)), key=lambda i: sim[i], reverse=True)
+        name = [name[i] for i in sorted_idx]
+        sim = [sim[i] for i in sorted_idx]
+        #상위 count개 뽑기
+        name, sim = name[:count], sim[:count]
+
+        return name, sim
+
+#강좌 처리
+def lecture_process(query, k, count, lecture_idx, lecture_name):
+    #파이스 검색
+    sim, I = lecture_idx.search(query, k)
+    #모두 같은 질의이므로 펼치기
+    sim, I = sim.reshape(-1), I.reshape(-1)
+    name = lecture_name.iloc[I, 0].tolist()
+    #상위 count개 뽑기
+    name, sim = top_k_list(name, sim, count)
+    
+    return name, sim
+
+# GPT 프롬프트 생성 함수
+def create_prompt(user_input, work_name_out, work_sim, lecture_name_out, lecture_sim):
+    job = ', '.join(
+        f"{name} (유사도: {sim:.2f})" for name, sim in zip(work_name_out, work_sim)
+    )
+    lecture = ', '.join(
+        f"{name} (유사도: {sim:.2f})" for name, sim in zip(lecture_name_out, lecture_sim)
+    )
+
+    prompt = (
+        f"사용자의 입력: {user_input}\n"
+        f"이 입력을 바탕으로 아래와 같은 직업들이 추천되었습니다:\n{job}\n"
+        f"추천된 직업을 바탕으로 다음과 같은 강좌들이 진로에 도움이 될 수 있습니다:\n{lecture}\n"
+        f"위 내용을 바탕으로 사용자의 진로 목표를 돕기 위한 요약과 조언을 작성해 주세요.\n"
+        f"친절하고 구체적으로, 마치 커리어 코치가 설명하듯 도와주세요."
+    )
+    return prompt
+
+#지피티 출력
+def make_output(prompt, client):
+    response = client.chat.completions.create(
+        model='gpt-4o-mini',
+        messages=[
+            {"role": "system", "content": "당신은 진로 추천 전문가입니다."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    output = response.choices[0].message.content
+    return output
+
+def print_result(gpt_out, work_name_out, work_sim, lecture_name_out, lecture_sim):
+    #GPT 결과 출력
+    print(f'출력\n{gpt_out}')
+    #직업, 강좌, 그에 대한 유사도 결과 출력
+    print(f'work_name : {work_name_out}')
+    print(f'work_sim : {work_sim}')
+    print(f'lecture_name : {lecture_name_out}')
+    print(f'lecture_sim : {lecture_sim}')
+
+#실행
+def main():
+    #상수로 데이터 불러옴
+    model, work_name, work_info, lecture_name, work_idx, f_idx, work_f_idx, work_f_name, lecture_idx, client = load_data()
+
+    while True:
+        #사용자 입력처리
+        user_input = input("무엇을 하고 싶으신가요 ? ('0'으로 종료)\n")
+        if user_input == '0':
+            return
+        work_query = query_process([user_input], model)
+
+        #사용자 입력 -> 직업 뽑기
+        work_name_out, work_sim = work_process(work_query, WORK_K, WORK_COUNT, work_idx, work_name, f_idx, work_f_idx, work_f_name)
+        
+        #강좌용 질의 생성
+        lecture_query = make_lecture_query(work_name_out, work_info, model)
+
+        #직업 -> 강좌 뽑기
+        lecture_name_out, lecture_sim = lecture_process(lecture_query, LECTURE_K, LECTURE_COUNT, lecture_idx, lecture_name)
+
+        
+        #최종 출력 생성
+        prompt = create_prompt(user_input, work_name_out, work_sim, lecture_name_out, lecture_sim)
+        gpt_out = make_output(prompt, client)
+        
+
+        #모든 결과 출력
+        print_result(gpt_out, work_name_out, work_sim, lecture_name_out, lecture_sim)
+
+main()
+
+
+
+
+
