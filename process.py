@@ -9,6 +9,7 @@ MODEL, WORK_IDX, WORK_NAME, WORK_INFO, F_IDX, WORK_F_IDX, WORK_F_NAME, LECTURE_I
 API = st.secrets['API']
 
 #만든 데이터 로드
+@st.cache_data
 def load_data():
     #임베딩 모델
     model = SentenceTransformer(MODEL)
