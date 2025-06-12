@@ -8,35 +8,34 @@ import streamlit as st
 MODEL, WORK_IDX, WORK_NAME, WORK_INFO, F_IDX, WORK_F_IDX, WORK_F_NAME, LECTURE_IDX, LECTURE_NAME, WORK_K, LECTURE_K, WORK_COUNT, LECTURE_COUNT = const.const_return()
 API = st.secrets['API']
 
-#만든 데이터 로드
-def load_data():
-    #임베딩 모델
-    model = SentenceTransformer(MODEL)
+@st.cache_resource
+def load_model():
+    return SentenceTransformer(MODEL, device='cpu')  # 또는 'cuda' 가능 시
 
-    #직업관련 파일
-    #설명기반 인덱스
+@st.cache_data
+def load_csvs_and_indices():
+    # 직업 관련 파일
     work_idx = faiss.read_index(WORK_IDX)
-    #인덱스 이름, 설명 라벨
     work_name = pd.read_csv(WORK_NAME)
-    
-    #지표기반 인덱스
     f_idx = faiss.read_index(F_IDX)
     work_f_idx = faiss.read_index(WORK_F_IDX)
-    #인덱스 이름, 설명 라벨
     work_f_name = pd.read_csv(WORK_F_NAME)
-    
-    #직업 설명용 라벨
     work_info = pd.read_csv(WORK_INFO)
 
-    #강좌관련 파일
-    #인덱스
+    # 강좌 관련 파일
     lecture_idx = faiss.read_index(LECTURE_IDX)
-    #이름라벨
     lecture_name = pd.read_csv(LECTURE_NAME)
 
-    #지피티 클라이언트
-    client = openai.OpenAI(api_key=API)
+    return work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name
 
+@st.cache_resource
+def load_client():
+    return openai.OpenAI(api_key=API)
+
+def load_data():
+    model = load_model()
+    work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name = load_csvs_and_indices()
+    client = load_client()
     return model, work_name, work_info, lecture_name, work_idx, f_idx, work_f_idx, work_f_name, lecture_idx, client
 
 #질의문 생성
