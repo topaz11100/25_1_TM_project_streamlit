@@ -1,8 +1,9 @@
 import streamlit as st
-from process import load_data, load_model, query_process, work_process, make_lecture_query, lecture_process, create_prompt, make_output
+from process import *
 
 work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name, WORK_K, WORK_COUNT, LECTURE_K, LECTURE_COUNT = load_data()
-model, client = load_model()
+client = load_gpt()
+model = load_emb()
 
 
 with open("intro.md", "r", encoding="utf-8") as f:

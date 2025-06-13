@@ -6,9 +6,6 @@ import streamlit as st
 
 @st.cache_data
 def load_data():
-    #임베딩 모델
-    #model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
-    
     # 직업 관련 파일
     # 설명 인덱스, 이름 라벨
     work_idx = faiss.read_index('data/work/work.index')
@@ -32,10 +29,13 @@ def load_data():
     return work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name, WORK_K, WORK_COUNT, LECTURE_K, LECTURE_COUNT
 
 @st.cache_resource
-def load_model():
-    model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
+def load_gpt():
     API = st.secrets['API']
-    return model, openai.OpenAI(api_key=API)
+    return openai.OpenAI(api_key=API)
+
+def load_emb():
+    model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
+    return model
 
 #질의문 생성
 def query_process(query, model):
