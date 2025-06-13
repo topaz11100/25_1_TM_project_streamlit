@@ -5,7 +5,6 @@ work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lec
 client = load_gpt()
 model = load_emb()
 
-
 with open("intro.md", "r", encoding="utf-8") as f:
     intro_md = f.read()
 

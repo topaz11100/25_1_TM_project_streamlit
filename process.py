@@ -4,7 +4,6 @@ import faiss
 import openai
 import streamlit as st
 
-@st.cache_data
 def load_data():
     # 직업 관련 파일
     # 설명 인덱스, 이름 라벨
@@ -28,7 +27,6 @@ def load_data():
 
     return work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name, WORK_K, WORK_COUNT, LECTURE_K, LECTURE_COUNT
 
-@st.cache_resource
 def load_gpt():
     API = st.secrets['API']
     return openai.OpenAI(api_key=API)
