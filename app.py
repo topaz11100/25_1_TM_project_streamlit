@@ -1,11 +1,13 @@
 import streamlit as st
-from process import load_data, query_process, work_process, make_lecture_query, lecture_process, create_prompt, make_output, WORK_K, LECTURE_K, WORK_COUNT, LECTURE_COUNT
+from process import load_data, load_client, query_process, work_process, make_lecture_query, lecture_process, create_prompt, make_output, WORK_K, LECTURE_K, WORK_COUNT, LECTURE_COUNT
 
-model, work_name, work_info, lecture_name, work_idx, f_idx, work_f_idx, work_f_name, lecture_idx, client = load_data()
+model, work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name = load_data()
+client = load_client()
 
 with open("intro.md", "r", encoding="utf-8") as f:
     intro_md = f.read()
-detail_result = ''
+
+detail_flag = False
 
 with st.container():
 
@@ -32,23 +34,23 @@ with st.container():
             gpt_out = make_output(prompt, client)
 
             status.update(label="✅ 처리 완료!", state="complete", expanded=False)
-        
-        work_sim, lecture_sim = [float(round(x, 3)) for x in work_sim], [round(x, 3) for x in lecture_sim]
-        
-        detail_result = (
-            f'추천된 직업 : {work_name_out}\n'
-            f'직업 유사도 : {work_sim}\n'
-            f'추천된 강의 : {lecture_name_out}\n'
-            f'강의 유사도 : {lecture_sim}\n'
-        )
 
         ai = st.chat_message("ai")
         ai.markdown(gpt_out)
+
+        detail_flag = True
 
 intro, detail = st.tabs(["프로젝트 소개", "상세 결과"])
 
 with intro:
     st.markdown(intro_md)
 with detail:
-    st.markdown(detail_result)
-
+    if detail_flag:
+        st.write('추천된 직업')
+        st.write(work_name_out)
+        st.write('직업 유사도')
+        st.write([round(float(s), 3) for s in work_sim])
+        st.write('추천된 강의')    
+        st.write(lecture_name_out)
+        st.write('강의 유사도')
+        st.write([round(float(s), 3) for s in lecture_sim])

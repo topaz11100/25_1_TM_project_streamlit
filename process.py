@@ -5,38 +5,34 @@ import openai
 import const
 import streamlit as st
 
-MODEL, WORK_IDX, WORK_NAME, WORK_INFO, F_IDX, WORK_F_IDX, WORK_F_NAME, LECTURE_IDX, LECTURE_NAME, WORK_K, LECTURE_K, WORK_COUNT, LECTURE_COUNT = const.const_return()
+MODEL, WORK_IDX, WORK_NAME, F_IDX, WORK_F_IDX, WORK_F_NAME, WORK_INFO, LECTURE_IDX, LECTURE_NAME, WORK_K, LECTURE_K, WORK_COUNT, LECTURE_COUNT = const.const_return()
 API = st.secrets['API']
 
-@st.cache_resource
-def load_model():
-    return SentenceTransformer(MODEL, device='cpu')  # 또는 'cuda' 가능 시
-
 @st.cache_data
-def load_csvs_and_indices():
+def load_data():
+    #임베딩 모델
+    model = SentenceTransformer(MODEL)
+
     # 직업 관련 파일
+    # 설명 인덱스, 이름 라벨
     work_idx = faiss.read_index(WORK_IDX)
     work_name = pd.read_csv(WORK_NAME)
+    #지표기반 인덱스, 이름 라벨
     f_idx = faiss.read_index(F_IDX)
     work_f_idx = faiss.read_index(WORK_F_IDX)
     work_f_name = pd.read_csv(WORK_F_NAME)
+    #이름-설명 쌍
     work_info = pd.read_csv(WORK_INFO)
 
     # 강좌 관련 파일
     lecture_idx = faiss.read_index(LECTURE_IDX)
     lecture_name = pd.read_csv(LECTURE_NAME)
 
-    return work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name
+    return model, work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name
 
 @st.cache_resource
 def load_client():
     return openai.OpenAI(api_key=API)
-
-def load_data():
-    model = load_model()
-    work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name = load_csvs_and_indices()
-    client = load_client()
-    return model, work_name, work_info, lecture_name, work_idx, f_idx, work_f_idx, work_f_name, lecture_idx, client
 
 #질의문 생성
 def query_process(query, model):
@@ -61,7 +57,6 @@ def make_lecture_query(name_list, work_info, model):
         paired.append(pair)
     #임베딩
     return query_process(paired, model)
-
 
 #리스트에서 빈도, 유사도 기준 상위 k개 뽑기
 def top_k_list(name, sim, count):
@@ -99,7 +94,7 @@ def work_e_process(query, k, count, work_idx, work_name):
     return name, sim
 
 #지표기반
-def work_F_process(query, count, f_idx, work_idx, work_name):
+def work_F_process(query, count, f_idx, work_f_idx, work_f_name):
     #사용자 입력으로 지표 유사벡터 뽑기
     f_sim, I = f_idx.search(query, f_idx.ntotal)
     #관련없는거 0처리, 쿼리 형식으로 변경
@@ -109,9 +104,9 @@ def work_F_process(query, count, f_idx, work_idx, work_name):
     faiss.normalize_L2(f_sim)
     
     #직업-지표점수 벡터로 검색
-    sim, I = work_idx.search(f_sim, count)
+    sim, I = work_f_idx.search(f_sim, count)
     #이름 뽑기
-    name = work_name.iloc[I[0], 0].tolist()
+    name = work_f_name.iloc[I[0], 0].tolist()
     
     #반환
     return name, sim[0]
@@ -170,7 +165,7 @@ def create_prompt(user_input, work_name_out, work_sim, lecture_name_out, lecture
 #지피티 출력
 def make_output(prompt, client):
     response = client.chat.completions.create(
-        model='gpt-4o-mini',
+        model='gpt-3.5-turbo',
         messages=[
             {"role": "system", "content": "당신은 진로 추천 전문가입니다."},
             {"role": "user", "content": prompt}
