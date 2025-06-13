@@ -1,8 +1,9 @@
 import streamlit as st
-from process import load_data, load_client, query_process, work_process, make_lecture_query, lecture_process, create_prompt, make_output, WORK_K, LECTURE_K, WORK_COUNT, LECTURE_COUNT
+from process import load_data, load_client, query_process, work_process, make_lecture_query, lecture_process, create_prompt, make_output
 
-model, work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name = load_data()
+model, work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name, WORK_K, WORK_COUNT, LECTURE_K, LECTURE_COUNT = load_data()
 client = load_client()
+
 
 with open("intro.md", "r", encoding="utf-8") as f:
     intro_md = f.read()

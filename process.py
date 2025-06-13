@@ -2,42 +2,38 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 import faiss
 import openai
-import const
 import streamlit as st
-
-MODEL, WORK_IDX, WORK_NAME, F_IDX, WORK_F_IDX, WORK_F_NAME, WORK_INFO, LECTURE_IDX, LECTURE_NAME, WORK_K, LECTURE_K, WORK_COUNT, LECTURE_COUNT = const.const_return()
-API = st.secrets['API']
 
 @st.cache_data
 def load_data():
     #임베딩 모델
-    model = SentenceTransformer(MODEL)
+    model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
     
     # 직업 관련 파일
     # 설명 인덱스, 이름 라벨
-    print(str(WORK_IDX))
     work_idx = faiss.read_index('data/work/work.index')
-    print('워크인덱스성공')
-    work_name = pd.read_csv(WORK_NAME)
+    work_name = pd.read_csv('data/work/work_name.csv')
     
     #지표기반 인덱스, 이름 라벨
-    f_idx = faiss.read_index(str(F_IDX))
-    work_f_idx = faiss.read_index(str(WORK_F_IDX))
-    work_f_name = pd.read_csv(WORK_F_NAME)
+    f_idx = faiss.read_index('data/feature_work/F.index')
+    work_f_idx = faiss.read_index('data/feature_work/work_F.index')
+    work_f_name = pd.read_csv('data/feature_work/work_f_name.csv')
     
     #이름-설명 쌍
-    work_info = pd.read_csv(WORK_INFO)
+    work_info = pd.read_csv('data/work/work_info.csv')
     
-
     # 강좌 관련 파일
-    lecture_idx = faiss.read_index(str(LECTURE_IDX))
-    lecture_name = pd.read_csv(LECTURE_NAME)
-    
+    lecture_idx = faiss.read_index('data/lecture/lecture.index')
+    lecture_name = pd.read_csv('data/lecture/lecture_name.csv')
 
-    return model, work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name
+    #뽑을 개수
+    WORK_K, WORK_COUNT, LECTURE_K, LECTURE_COUNT = 20, 5, 20, 10
+
+    return model, work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name, WORK_K, WORK_COUNT, LECTURE_K, LECTURE_COUNT
 
 @st.cache_resource
 def load_client():
+    API = st.secrets['API']
     return openai.OpenAI(api_key=API)
 
 #질의문 생성
