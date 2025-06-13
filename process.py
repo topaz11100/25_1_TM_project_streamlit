@@ -16,7 +16,8 @@ def load_data():
     # 직업 관련 파일
     # 설명 인덱스, 이름 라벨
     print(str(WORK_IDX))
-    work_idx = faiss.read_index(str(WORK_IDX))
+    work_idx = faiss.read_index('data/work/work.index')
+    print('워크인덱스성공')
     work_name = pd.read_csv(WORK_NAME)
     
     #지표기반 인덱스, 이름 라벨
