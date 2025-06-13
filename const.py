@@ -1,32 +1,32 @@
 from pathlib import Path
 
-BASE_DIR = str(Path(__file__).resolve().parent)
+BASE_DIR = Path(__file__).resolve().parent
 
 #임베딩 모델
 MODEL = 'paraphrase-multilingual-mpnet-base-v2'
 
 #직업관련 파일
 #설명기반 인덱스
-WORK_IDX = BASE_DIR + '/data/work/work.index'
+WORK_IDX = BASE_DIR / '/data/work/work.index'
 #이름 라벨
-WORK_NAME = BASE_DIR + '/data/work/work_name.csv'
+WORK_NAME = BASE_DIR / '/data/work/work_name.csv'
 
 #지표기반 인덱스
 #지표임베딩 인덱스
-F_IDX = BASE_DIR + '/data/feature_work/F.index'
+F_IDX = BASE_DIR / '/data/feature_work/F.index'
 #직업-지표점수 인덱스
-WORK_F_IDX = BASE_DIR + '/data/feature_work/work_F.index'
+WORK_F_IDX = BASE_DIR / '/data/feature_work/work_F.index'
 #이름 라벨
-WORK_F_NAME = BASE_DIR + '/data/feature_work/work_f_name.csv'
+WORK_F_NAME = BASE_DIR / '/data/feature_work/work_f_name.csv'
 
 #이름-설명 쌍
-WORK_INFO = BASE_DIR + '/data/work/work_info.csv'
+WORK_INFO = BASE_DIR / '/data/work/work_info.csv'
 
 #강좌관련 파일
 #인덱스
-LECTURE_IDX = BASE_DIR + '/data/lecture/lecture.index'
+LECTURE_IDX = BASE_DIR / '/data/lecture/lecture.index'
 #이름 라벨
-LECTURE_NAME = BASE_DIR + '/data/lecture/lecture_name.csv'
+LECTURE_NAME = BASE_DIR / '/data/lecture/lecture_name.csv'
 
 #문서 DB에서 몇 개 뽑을지에 대한 상수
 WORK_K = 20

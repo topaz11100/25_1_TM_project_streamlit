@@ -12,25 +12,25 @@ API = st.secrets['API']
 def load_data():
     #임베딩 모델
     model = SentenceTransformer(MODEL)
-    print('모델')
+    
     # 직업 관련 파일
     # 설명 인덱스, 이름 라벨
-    work_idx = faiss.read_index(WORK_IDX)
+    work_idx = faiss.read_index(str(WORK_IDX))
     work_name = pd.read_csv(WORK_NAME)
-    print('직업')
+    
     #지표기반 인덱스, 이름 라벨
-    f_idx = faiss.read_index(F_IDX)
-    work_f_idx = faiss.read_index(WORK_F_IDX)
+    f_idx = faiss.read_index(str(F_IDX))
+    work_f_idx = faiss.read_index(str(WORK_F_IDX))
     work_f_name = pd.read_csv(WORK_F_NAME)
-    print('지표')
+    
     #이름-설명 쌍
     work_info = pd.read_csv(WORK_INFO)
-    print('정보')
+    
 
     # 강좌 관련 파일
-    lecture_idx = faiss.read_index(LECTURE_IDX)
+    lecture_idx = faiss.read_index(str(LECTURE_IDX))
     lecture_name = pd.read_csv(LECTURE_NAME)
-    print('강좌')
+    
 
     return model, work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name
 
