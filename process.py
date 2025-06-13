@@ -7,7 +7,7 @@ import streamlit as st
 @st.cache_data
 def load_data():
     #임베딩 모델
-    model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
+    #model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
     
     # 직업 관련 파일
     # 설명 인덱스, 이름 라벨
@@ -29,12 +29,13 @@ def load_data():
     #뽑을 개수
     WORK_K, WORK_COUNT, LECTURE_K, LECTURE_COUNT = 20, 5, 20, 10
 
-    return model, work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name, WORK_K, WORK_COUNT, LECTURE_K, LECTURE_COUNT
+    return work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name, WORK_K, WORK_COUNT, LECTURE_K, LECTURE_COUNT
 
 @st.cache_resource
-def load_client():
+def load_model():
+    model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
     API = st.secrets['API']
-    return openai.OpenAI(api_key=API)
+    return model, openai.OpenAI(api_key=API)
 
 #질의문 생성
 def query_process(query, model):
