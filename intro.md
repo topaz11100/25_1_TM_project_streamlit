@@ -9,3 +9,5 @@
 |:--:|:--|
 |직업|고용24 직업정보(워크넷)|
 |강좌|광운대학교 강의계획서, k-mooc공개 강의|
+
+#### [상세설명](https://github.com/topaz11100/25_1_TM_project_streamlit/blob/main/Team_2_presentation.pdf)
