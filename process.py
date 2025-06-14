@@ -33,6 +33,7 @@ def load_gpt():
     API = st.secrets['API']
     return openai.OpenAI(api_key=API)
 
+@st.cache_resource
 def load_emb():
     model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
     return model

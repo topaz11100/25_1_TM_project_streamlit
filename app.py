@@ -3,7 +3,7 @@ from process import *
 
 work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name, WORK_K, WORK_COUNT, LECTURE_K, LECTURE_COUNT = load_data()
 client = load_gpt()
-#model = load_emb()
+model = load_emb()
 
 with open("intro.md", "r", encoding="utf-8") as f:
     intro_md = f.read()
