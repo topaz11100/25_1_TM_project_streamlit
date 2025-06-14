@@ -1,9 +1,7 @@
 import streamlit as st
 from process import *
 
-work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name, WORK_K, WORK_COUNT, LECTURE_K, LECTURE_COUNT = load_data()
-client = load_gpt()
-model = load_emb()
+model, work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name, WORK_K, WORK_COUNT, LECTURE_K, LECTURE_COUNT, gpt = load_data()
 
 with open("intro.md", "r", encoding="utf-8") as f:
     intro_md = f.read()
@@ -32,7 +30,7 @@ with st.container():
             
             st.write("답변 생성 중...")
             prompt = create_prompt(user_input, work_name_out, work_sim, lecture_name_out, lecture_sim)
-            gpt_out = make_output(prompt, client)
+            gpt_out = make_output(prompt, gpt)
 
             status.update(label="✅ 처리 완료!", state="complete", expanded=False)
 

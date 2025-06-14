@@ -4,8 +4,11 @@ import faiss
 import openai
 import streamlit as st
 
-@st.cache_data
+@st.cache_resource
 def load_data():
+    #임베딩 모델
+    model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
+    
     # 직업 관련 파일
     # 설명 인덱스, 이름 라벨
     work_idx = faiss.read_index('data/work/work.index')
@@ -26,17 +29,11 @@ def load_data():
     #뽑을 개수
     WORK_K, WORK_COUNT, LECTURE_K, LECTURE_COUNT = 20, 5, 20, 10
 
-    return work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name, WORK_K, WORK_COUNT, LECTURE_K, LECTURE_COUNT
-
-@st.cache_resource
-def load_gpt():
+    #지피티 api
     API = st.secrets['API']
-    return openai.OpenAI(api_key=API)
+    gpt = openai.OpenAI(api_key=API)
 
-@st.cache_resource
-def load_emb():
-    model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
-    return model
+    return model, work_idx, work_name, f_idx, work_f_idx, work_f_name, work_info, lecture_idx, lecture_name, WORK_K, WORK_COUNT, LECTURE_K, LECTURE_COUNT, gpt
 
 #질의문 생성
 def query_process(query, model):
