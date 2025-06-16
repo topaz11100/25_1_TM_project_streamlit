@@ -12,5 +12,5 @@
 
 #### [상세설명](https://github.com/topaz11100/25_1_TM_project_streamlit/blob/main/Team_2_presentation.pdf)
 
-### 입력예시
+#### 입력예시
 언젠가는 의료 기술과 데이터를 융합해서 사람들의 건강을 예측하고 돕는 시스템을 만들어보고 싶어요. 막연하지만 그런 기술이 세상을 바꿀 수 있다고 믿고 있어요.
